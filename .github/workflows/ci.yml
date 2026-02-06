@@ -55,3 +55,29 @@ jobs:
           tags: |
             ${{ steps.meta.outputs.IMAGE }}:${{ steps.meta.outputs.TAG }}
             ${{ steps.meta.outputs.IMAGE }}:latest
+
+  deploy_smoke:
+    needs: docker
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull and run container (smoke deploy)
+        run: |
+          set -euo pipefail
+          IMAGE="ghcr.io/${{ github.repository }}:latest"
+
+          echo "Pulling $IMAGE"
+          docker pull "$IMAGE"
+
+          echo "Running container"
+          docker run --rm "$IMAGE" | tee out.txt
+
+          echo "Verifying the app works"
+          grep -q "Hello World!" out.txt
