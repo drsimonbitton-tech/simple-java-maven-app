@@ -88,7 +88,7 @@ jobs:
             ${{ steps.meta.outputs.IMAGE }}:latest
 
   deploy_smoke:
-    needs: docker
+    needs: [docker, bump_version]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
